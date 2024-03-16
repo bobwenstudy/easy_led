@@ -47,10 +47,10 @@ void eled_process_next_state(eled_led_t *led)
         // led off
         eled_default.set_state_fn(led, new_state);
 
+        led->blink_reserve_cnt--;
+
         if (led->blink_reserve_cnt)
         {
-            led->blink_reserve_cnt--;
-
             // led off
             eled_start_timer(led, led->param.time_inactive);
         }
@@ -80,28 +80,39 @@ void eled_stop(eled_led_t *led)
     eled_default.set_state_fn(led, 0);
 }
 
-void eled_start(eled_led_t *led, const eled_led_param_t *param)
+int eled_start(eled_led_t *led, const eled_led_param_t *param)
 {
     if (led == NULL)
     {
-        return;
+        return 0;
     }
 
     // if active time is zeor,
-    if (param->time_active == 0 || param->time_inactive == 0)
+    if ((param->time_active == 0) || (param->blink_cnt == 0))
     {
-        return;
+        return 0;
+    }
+    
+    // if inactive time is zeor and blink count is more than 1
+    if ((param->time_inactive == 0) && (param->blink_cnt > 1))
+    {
+        return 0;
     }
 
-    // add to queue
-    if (!led->is_in_process)
+    // if led is in process, stop it
+    if (led->is_in_process)
     {
-        memcpy(&led->param, param, sizeof(eled_led_param_t));
-
-        led->state = 0;
-        led->is_in_process = 1;
-        led->blink_reserve_cnt = led->param.blink_cnt;
-
-        eled_process_next_state(led);
+        eled_stop(led);
     }
+    
+    // prepare led param, and add to led list
+    memcpy(&led->param, param, sizeof(eled_led_param_t));
+
+    led->state = 0;
+    led->is_in_process = 1;
+    led->blink_reserve_cnt = led->param.blink_cnt;
+
+    eled_process_next_state(led);
+
+    return 1;
 }

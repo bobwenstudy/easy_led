@@ -115,44 +115,47 @@ static volatile uint32_t test_processed_time_current;
 /*
  * Simulate led event
  */
-static const eled_led_param_t test_param_single = ELED_PARAMS_INIT(100, 200, 0, 0, 0);
+static const eled_led_param_t test_param_single = ELED_PARAMS_INIT(100, 200, 1, 0, 0);
 static const led_test_evt_t test_events_single[] = {
-        LED_STATE_RAW(1, 0, 0),
-        LED_STATE_RAW(0, 0, test_param_single.time_active),
+        LED_STATE_RAW(1, 1, 0),
+        LED_STATE_RAW(0, 1, test_param_single.time_active),
 };
 
-static const eled_led_param_t test_param_single_on_zero = ELED_PARAMS_INIT(0, 200, 0, 0, 0);
+static const eled_led_param_t test_param_single_on_zero = ELED_PARAMS_INIT(0, 200, 1, 0, 0);
 static const led_test_evt_t test_events_single_on_zero[] = {};
 
-static const eled_led_param_t test_param_single_off_zero = ELED_PARAMS_INIT(100, 0, 0, 0, 0);
-static const led_test_evt_t test_events_single_off_zero[] = {};
-
-static const eled_led_param_t test_param_single_repeat = ELED_PARAMS_INIT(100, 200, 0, 1000, 1);
-static const led_test_evt_t test_events_single_repeat[] = {
-        LED_STATE_RAW(1, 0, 0),
-        LED_STATE_RAW(0, 0, test_param_single_repeat.time_active),
-};
-
-static const eled_led_param_t test_param_blink = ELED_PARAMS_INIT(100, 200, 1, 0, 0);
-static const led_test_evt_t test_events_blink[] = {
+static const eled_led_param_t test_param_single_off_zero = ELED_PARAMS_INIT(100, 0, 1, 0, 0);
+static const led_test_evt_t test_events_single_off_zero[] = {
         LED_STATE_RAW(1, 1, 0),
-        LED_STATE_RAW(0, 1, test_param_blink.time_active),
-        LED_STATE_RAW(1, 0, test_param_blink.time_inactive),
-        LED_STATE_RAW(0, 0, test_param_blink.time_active),
+        LED_STATE_RAW(0, 1, test_param_single_off_zero.time_active),
 };
 
-static const eled_led_param_t test_param_blink_on_zero = ELED_PARAMS_INIT(0, 200, 1, 0, 0);
+static const eled_led_param_t test_param_single_repeat = ELED_PARAMS_INIT(100, 200, 1, 1000, 1);
+static const led_test_evt_t test_events_single_repeat[] = {
+        LED_STATE_RAW(1, 1, 0),
+        LED_STATE_RAW(0, 1, test_param_single_repeat.time_active),
+};
+
+static const eled_led_param_t test_param_blink = ELED_PARAMS_INIT(100, 200, 2, 0, 0);
+static const led_test_evt_t test_events_blink[] = {
+        LED_STATE_RAW(1, 2, 0),
+        LED_STATE_RAW(0, 2, test_param_blink.time_active),
+        LED_STATE_RAW(1, 1, test_param_blink.time_inactive),
+        LED_STATE_RAW(0, 1, test_param_blink.time_active),
+};
+
+static const eled_led_param_t test_param_blink_on_zero = ELED_PARAMS_INIT(0, 200, 2, 0, 0);
 static const led_test_evt_t test_events_blink_on_zero[] = {};
 
-static const eled_led_param_t test_param_blink_off_zero = ELED_PARAMS_INIT(100, 0, 1, 0, 0);
+static const eled_led_param_t test_param_blink_off_zero = ELED_PARAMS_INIT(100, 0, 2, 0, 0);
 static const led_test_evt_t test_events_blink_off_zero[] = {};
 
-static const eled_led_param_t test_param_blink_repeat = ELED_PARAMS_INIT(200, 300, 1, 1000, 1);
+static const eled_led_param_t test_param_blink_repeat = ELED_PARAMS_INIT(200, 300, 2, 1000, 1);
 static const led_test_evt_t test_events_blink_repeat[] = {
-        LED_STATE_RAW(1, 1, 0),
+        LED_STATE_RAW(1, 2, 0),
+        LED_STATE_RAW(0, 2, test_param_blink_repeat.time_active),
+        LED_STATE_RAW(1, 1, test_param_blink_repeat.time_inactive),
         LED_STATE_RAW(0, 1, test_param_blink_repeat.time_active),
-        LED_STATE_RAW(1, 0, test_param_blink_repeat.time_inactive),
-        LED_STATE_RAW(0, 0, test_param_blink_repeat.time_active),
 };
 
 static led_test_arr_t test_list[] = {

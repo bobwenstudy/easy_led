@@ -123,8 +123,9 @@ void eled_stop(eled_led_t *led);
  *
  * \param[in]       led: Led handle
  * \param[in]       param: Led work param
+ * \return          `1` on success, `0` otherwise
  */
-void eled_start(eled_led_t *led, const eled_led_param_t *param);
+int eled_start(eled_led_t *led, const eled_led_param_t *param);
 
 #ifdef __cplusplus
 }
