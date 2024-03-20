@@ -14,6 +14,8 @@ struct eled;
 
 #define ELED_MAX_KEYNUM (32)
 
+// #define ELED_PROCESS_LAST_OFF_EVENT
+
 /**
  * \brief           Set state state callback function
  *
@@ -22,6 +24,17 @@ struct eled;
  *
  */
 typedef void (*eled_set_state_fn)(struct eled_led *led, uint8_t state);
+
+
+/**
+ * @brief Typedef for the event end function callback.
+ *
+ * This typedef defines a function pointer type for the event end function callback.
+ * The callback function takes a pointer to a `struct eled_led` as its parameter and returns void.
+ *
+ * @param led Pointer to the LED structure.
+ */
+typedef void (*eled_event_end_fn)(struct eled_led *led);
 
 /**
  * \brief           Set state state callback function
@@ -40,6 +53,8 @@ extern void eled_stop_timer(struct eled_led *led);
  */
 typedef struct eled_led_param
 {
+    uint16_t id; /*!< LED effect id */
+
     uint16_t time_active; /*!< LED active time in milliseconds */
 
     uint16_t time_inactive; /*!< LED inactive time in milliseconds */
@@ -51,9 +66,9 @@ typedef struct eled_led_param
     uint8_t is_repeat; /*!< Need Repeat or not */
 } eled_led_param_t;
 
-#define ELED_PARAMS_INIT(_time_active, _time_inactive, _blink_cnt, _time_repeat_delay, _is_repeat)                                                             \
+#define ELED_PARAMS_INIT(_id, _time_active, _time_inactive, _blink_cnt, _time_repeat_delay, _is_repeat)                                                             \
     {                                                                                                                                                          \
-        .time_active = _time_active, .time_inactive = _time_inactive, .blink_cnt = _blink_cnt, .time_repeat_delay = _time_repeat_delay,                        \
+        .id = _id, .time_active = _time_active, .time_inactive = _time_inactive, .blink_cnt = _blink_cnt, .time_repeat_delay = _time_repeat_delay,                        \
         .is_repeat = _is_repeat                                                                                                                                \
     }
 
@@ -85,7 +100,8 @@ typedef struct eled_led
  */
 typedef struct eled
 {
-    eled_set_state_fn set_state_fn; /*!< Pointer to set state function */
+    eled_set_state_fn set_state_fn;  /*!< Pointer to set state function */
+    eled_event_end_fn event_end_fn; /*!< Pointer to event end function */
 } eled_t;
 
 /**
@@ -99,10 +115,11 @@ int eled_is_led_in_process(const eled_led_t *led);
 /**
  * \brief           Initialize led manager
  * \param[in]       set_state_fn: Pointer to function set led state on demand.
+ * \param[in]       set_state_fn: Pointer to function led event end demand.
  *
  * \return          `1` on success, `0` otherwise
  */
-int eled_init(eled_set_state_fn set_state_fn);
+int eled_init(eled_set_state_fn set_state_fn, eled_event_end_fn event_end_fn);
 
 /**
  * \brief           Process the led next state.

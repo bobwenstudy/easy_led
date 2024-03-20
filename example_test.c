@@ -93,9 +93,9 @@ static void test_timer_timeout(void *arg)
 
 static eled_led_t leds[3];
 
-struct test_timer timer_red = {NULL, 0, &leds[0], test_timer_timeout};
-struct test_timer timer_green = {NULL, 0, &leds[1], test_timer_timeout};
-struct test_timer timer_blue = {NULL, 0, &leds[2], test_timer_timeout};
+static struct test_timer timer_red = {NULL, 0, &leds[0], test_timer_timeout};
+static struct test_timer timer_green = {NULL, 0, &leds[1], test_timer_timeout};
+static struct test_timer timer_blue = {NULL, 0, &leds[2], test_timer_timeout};
 
 /* List of used leds -> test case */
 static eled_led_t leds[] = {
@@ -115,28 +115,28 @@ static volatile uint32_t test_processed_time_current;
 /*
  * Simulate led event
  */
-static const eled_led_param_t test_param_single = ELED_PARAMS_INIT(100, 200, 1, 0, 0);
+static const eled_led_param_t test_param_single = ELED_PARAMS_INIT(1, 100, 200, 1, 0, 0);
 static const led_test_evt_t test_events_single[] = {
         LED_STATE_RAW(1, 1, 0),
         LED_STATE_RAW(0, 1, test_param_single.time_active),
 };
 
-static const eled_led_param_t test_param_single_on_zero = ELED_PARAMS_INIT(0, 200, 1, 0, 0);
+static const eled_led_param_t test_param_single_on_zero = ELED_PARAMS_INIT(2, 0, 200, 1, 0, 0);
 static const led_test_evt_t test_events_single_on_zero[] = {};
 
-static const eled_led_param_t test_param_single_off_zero = ELED_PARAMS_INIT(100, 0, 1, 0, 0);
+static const eled_led_param_t test_param_single_off_zero = ELED_PARAMS_INIT(3, 100, 0, 1, 0, 0);
 static const led_test_evt_t test_events_single_off_zero[] = {
         LED_STATE_RAW(1, 1, 0),
         LED_STATE_RAW(0, 1, test_param_single_off_zero.time_active),
 };
 
-static const eled_led_param_t test_param_single_repeat = ELED_PARAMS_INIT(100, 200, 1, 1000, 1);
+static const eled_led_param_t test_param_single_repeat = ELED_PARAMS_INIT(4, 100, 200, 1, 1000, 1);
 static const led_test_evt_t test_events_single_repeat[] = {
         LED_STATE_RAW(1, 1, 0),
         LED_STATE_RAW(0, 1, test_param_single_repeat.time_active),
 };
 
-static const eled_led_param_t test_param_blink = ELED_PARAMS_INIT(100, 200, 2, 0, 0);
+static const eled_led_param_t test_param_blink = ELED_PARAMS_INIT(5, 100, 200, 2, 0, 0);
 static const led_test_evt_t test_events_blink[] = {
         LED_STATE_RAW(1, 2, 0),
         LED_STATE_RAW(0, 2, test_param_blink.time_active),
@@ -144,13 +144,13 @@ static const led_test_evt_t test_events_blink[] = {
         LED_STATE_RAW(0, 1, test_param_blink.time_active),
 };
 
-static const eled_led_param_t test_param_blink_on_zero = ELED_PARAMS_INIT(0, 200, 2, 0, 0);
+static const eled_led_param_t test_param_blink_on_zero = ELED_PARAMS_INIT(6, 0, 200, 2, 0, 0);
 static const led_test_evt_t test_events_blink_on_zero[] = {};
 
-static const eled_led_param_t test_param_blink_off_zero = ELED_PARAMS_INIT(100, 0, 2, 0, 0);
+static const eled_led_param_t test_param_blink_off_zero = ELED_PARAMS_INIT(7, 100, 0, 2, 0, 0);
 static const led_test_evt_t test_events_blink_off_zero[] = {};
 
-static const eled_led_param_t test_param_blink_repeat = ELED_PARAMS_INIT(200, 300, 2, 1000, 1);
+static const eled_led_param_t test_param_blink_repeat = ELED_PARAMS_INIT(8, 200, 300, 2, 1000, 1);
 static const led_test_evt_t test_events_blink_repeat[] = {
         LED_STATE_RAW(1, 2, 0),
         LED_STATE_RAW(0, 2, test_param_blink_repeat.time_active),
@@ -278,7 +278,13 @@ static void prv_led_set_state(struct eled_led *led, uint8_t state)
     ++test_processed_array_index; /* Go to next step in next event */
 }
 
-void eled_start_timer(struct eled_led *led, uint16_t time)
+/* Process led event */
+static void proc_led_end_event(struct eled_led *led)
+{
+    printf("LED end event. led_id:0x%x, effect_id:0x%x\r\n", led->led_id, led->param.id);
+}
+
+void tester_eled_start_timer(struct eled_led *led, uint16_t time)
 {
     struct test_timer *timer = led->timer_handle;
 
@@ -286,7 +292,7 @@ void eled_start_timer(struct eled_led *led, uint16_t time)
     test_timer_start(timer, time);
 }
 
-void eled_stop_timer(struct eled_led *led)
+void tester_eled_stop_timer(struct eled_led *led)
 {
     struct test_timer *timer = led->timer_handle;
     //     printf("eled_stop_timer()");
@@ -316,7 +322,7 @@ int example_test(void)
         test_timer_init();
 
         /* Define leds */
-        eled_init(prv_led_set_state);
+        eled_init(prv_led_set_state, proc_led_end_event);
 
         eled_start(test_get_led_by_led_id(select_test_item->test_led_id), select_test_item->test_param);
 
@@ -354,7 +360,7 @@ int example_test(void)
     return 0;
 }
 
-uint32_t test_timer_get_ticks(void)
+uint32_t tester_test_timer_get_ticks(void)
 {
     return test_processed_time_current;
 }

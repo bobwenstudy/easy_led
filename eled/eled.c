@@ -4,7 +4,7 @@
 /* Default led group instance */
 static eled_t eled_default;
 
-int eled_init(eled_set_state_fn set_state_fn)
+int eled_init(eled_set_state_fn set_state_fn, eled_event_end_fn event_end_fn)
 {
     eled_t *ebtobj = &eled_default;
 
@@ -15,6 +15,7 @@ int eled_init(eled_set_state_fn set_state_fn)
 
     memset(ebtobj, 0x00, sizeof(*ebtobj));
     ebtobj->set_state_fn = set_state_fn;
+    ebtobj->event_end_fn = event_end_fn;
 
     return 1;
 }
@@ -22,6 +23,19 @@ int eled_init(eled_set_state_fn set_state_fn)
 int eled_is_led_in_process(const eled_led_t *led)
 {
     return led != NULL && (led->is_in_process);
+}
+
+void eled_process_end_work(eled_led_t *led)
+{
+    eled_t *ebtobj = &eled_default;
+
+    led->is_in_process = 0;
+    eled_stop_timer(led);
+
+    if(ebtobj->event_end_fn)
+    {
+        ebtobj->event_end_fn(led);
+    }
 }
 
 void eled_process_next_state(eled_led_t *led)
@@ -32,6 +46,15 @@ void eled_process_next_state(eled_led_t *led)
     {
         return;
     }
+
+#ifdef ELED_PROCESS_LAST_OFF_EVENT
+    if (led->blink_reserve_cnt == 0)
+    {
+        eled_process_end_work(led);
+        return;
+    }
+#endif
+
     // printf("eled_process_next_state(), rep: %d, process: %d, new_state: %d, rsv_cnt: %d\n", led->param.is_repeat, led->is_in_process, new_state,
     // led->blink_reserve_cnt);
     led->state = new_state;
@@ -65,8 +88,11 @@ void eled_process_next_state(eled_led_t *led)
             }
             else
             {
-                led->is_in_process = 0;
-                eled_stop_timer(led);
+#ifdef ELED_PROCESS_LAST_OFF_EVENT
+                eled_start_timer(led, led->param.time_inactive);
+#else
+                eled_process_end_work(led);
+#endif
             }
         }
     }
