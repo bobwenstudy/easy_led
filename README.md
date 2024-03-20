@@ -56,9 +56,9 @@ typedef enum
 } user_led_t;
 
 /* User defined settings */
-static const eled_led_param_t test_param_0 = ELED_PARAMS_INIT(200, 200, 5, 0, 0);
-static const eled_led_param_t test_param_1 = ELED_PARAMS_INIT(800, 200, 3, 0, 0);
-static const eled_led_param_t test_param_2 = ELED_PARAMS_INIT(1000, 2000, 0, 0, 0);
+static const eled_led_param_t test_param_0 = ELED_PARAMS_INIT(1, 200, 200, 5, 0, 0);
+static const eled_led_param_t test_param_1 = ELED_PARAMS_INIT(2, 800, 200, 3, 0, 0);
+static const eled_led_param_t test_param_2 = ELED_PARAMS_INIT(3, 1000, 2000, 0, 0, 0);
 
 
 static void test_timer_timeout(void *arg)
@@ -100,13 +100,13 @@ void eled_stop_timer(struct eled_led *led)
 }
 ```
 
-Step3：初始化LED驱动，注册`prv_led_set_state`接口，用于用户层实现LED真实的点亮和关闭行为。
+Step3：初始化LED驱动，注册`prv_led_set_state`接口，用于用户层实现LED真实的点亮和关闭行为。注册`proc_led_end_event`接口，用于LED事件结束通知用户层。
 
 ```c
-eled_init(prv_led_set_state);
+eled_init(prv_led_set_state, proc_led_end_event);
 ```
 
-Step4：按需启动不同灯的不同闪烁参数。之后LED灯就会按照参数回调注册的`prv_led_set_state()`。
+Step4：按需启动不同灯的不同闪烁参数。之后LED灯就会按照参数回调注册的`prv_led_set_state()`，灯效结束后回调`proc_led_end_event()`。
 
 ```c
 eled_start(&led_red, &test_param_0);
@@ -128,6 +128,7 @@ LED每个灯效可以总结为如下参数。
 
 | 名称              | 说明                |
 | ----------------- | ------------------- |
+| id                | LED灯效ID           |
 | time_active       | LED亮持续时间       |
 | time_inactive     | LED灭持续时间       |
 | blink_cnt         | LED闪烁次数         |
@@ -139,6 +140,8 @@ LED每个灯效可以总结为如下参数。
 ```c
 typedef struct eled_led_param
 {
+    uint16_t id; /*!< LED effect id */
+
     uint16_t time_active; /*!< LED active time in milliseconds */
 
     uint16_t time_inactive; /*!< LED inactive time in milliseconds */
@@ -198,6 +201,7 @@ LED驱动需要管理LED灯设置状态回调接口。
 | 名称         | 说明                    |
 | ------------ | ----------------------- |
 | set_state_fn | LED灯状态设置的回调接口 |
+| event_end_fn | LED灯效结束回调接口     |
 
 
 
@@ -205,6 +209,7 @@ LED驱动需要管理LED灯设置状态回调接口。
 typedef struct eled
 {
     eled_set_state_fn set_state_fn; /*!< Pointer to set state function */
+    eled_event_end_fn event_end_fn; /*!< Pointer to event end function */
 } eled_t;
 ```
 
@@ -316,6 +321,9 @@ make all
 ```shell
 PS D:\workspace\github\easy_led> make run
 Compiling  : "example_test.c"
+Compiling  : "example_user.c"
+Compiling  : "main.c"
+Compiling  : "eled/eled.c"
 Linking    : "output/main.exe"
 Building   : "output/main.exe"
 Start Build Image.
@@ -324,53 +332,58 @@ copy from `output/main.exe' [pei-i386] to `output/main.bin' [binary]
 objdump --source --all-headers --demangle --line-numbers --wide output/main.exe > output/main.lst
 Print Size
    text    data     bss     dec     hex filename
-  41864    3260    2644   47768    ba98 output/main.exe
+  44940    3484    2644   51068    c77c output/main.exe
 ./output/main.exe
 Test running
-[      0][     0] ID(hex):   0, state: ON, reserve-cnt:   0
-[    100][   100] ID(hex):   0, state: OFF, reserve-cnt:   0
+[      0][     0] ID(hex):   0, state: ON, reserve-cnt:   1
+[    100][   100] ID(hex):   0, state: OFF, reserve-cnt:   1
+[    300] LED end event. ID(hex):   0, effect_id:0x1
 Testing test_events_single ................................................. pass
 Testing test_events_single_on_zero ......................................... pass
+[      0][     0] ID(hex):   0, state: ON, reserve-cnt:   1
+[    100][   100] ID(hex):   0, state: OFF, reserve-cnt:   1
+[    100] LED end event. ID(hex):   0, effect_id:0x3
 Testing test_events_single_off_zero ........................................ pass
-[      0][     0] ID(hex):   0, state: ON, reserve-cnt:   0
-[    100][   100] ID(hex):   0, state: OFF, reserve-cnt:   0
-[   1300][  1200] ID(hex):   0, state: ON, reserve-cnt:   0
-[   1400][   100] ID(hex):   0, state: OFF, reserve-cnt:   0
-[   2600][  1200] ID(hex):   0, state: ON, reserve-cnt:   0
-[   2700][   100] ID(hex):   0, state: OFF, reserve-cnt:   0
-[   3900][  1200] ID(hex):   0, state: ON, reserve-cnt:   0
-[   4000][   100] ID(hex):   0, state: OFF, reserve-cnt:   0
-[   5200][  1200] ID(hex):   0, state: ON, reserve-cnt:   0
-[   5300][   100] ID(hex):   0, state: OFF, reserve-cnt:   0
-[   6500][  1200] ID(hex):   0, state: ON, reserve-cnt:   0
-[   6600][   100] ID(hex):   0, state: OFF, reserve-cnt:   0
-[   7800][  1200] ID(hex):   0, state: ON, reserve-cnt:   0
-[   7900][   100] ID(hex):   0, state: OFF, reserve-cnt:   0
+[      0][     0] ID(hex):   0, state: ON, reserve-cnt:   1
+[    100][   100] ID(hex):   0, state: OFF, reserve-cnt:   1
+[   1300][  1200] ID(hex):   0, state: ON, reserve-cnt:   1
+[   1400][   100] ID(hex):   0, state: OFF, reserve-cnt:   1
+[   2600][  1200] ID(hex):   0, state: ON, reserve-cnt:   1
+[   2700][   100] ID(hex):   0, state: OFF, reserve-cnt:   1
+[   3900][  1200] ID(hex):   0, state: ON, reserve-cnt:   1
+[   4000][   100] ID(hex):   0, state: OFF, reserve-cnt:   1
+[   5200][  1200] ID(hex):   0, state: ON, reserve-cnt:   1
+[   5300][   100] ID(hex):   0, state: OFF, reserve-cnt:   1
+[   6500][  1200] ID(hex):   0, state: ON, reserve-cnt:   1
+[   6600][   100] ID(hex):   0, state: OFF, reserve-cnt:   1
+[   7800][  1200] ID(hex):   0, state: ON, reserve-cnt:   1
+[   7900][   100] ID(hex):   0, state: OFF, reserve-cnt:   1
 Testing test_events_single_repeat .......................................... pass
-[      0][     0] ID(hex):   1, state: ON, reserve-cnt:   1
-[    100][   100] ID(hex):   1, state: OFF, reserve-cnt:   1
-[    300][   200] ID(hex):   1, state: ON, reserve-cnt:   0
-[    400][   100] ID(hex):   1, state: OFF, reserve-cnt:   0
+[      0][     0] ID(hex):   1, state: ON, reserve-cnt:   2
+[    100][   100] ID(hex):   1, state: OFF, reserve-cnt:   2
+[    300][   200] ID(hex):   1, state: ON, reserve-cnt:   1
+[    400][   100] ID(hex):   1, state: OFF, reserve-cnt:   1
+[    600] LED end event. ID(hex):   1, effect_id:0x5
 Testing test_events_blink .................................................. pass
 Testing test_events_blink_on_zero .......................................... pass
 Testing test_events_blink_off_zero ......................................... pass
-[      0][     0] ID(hex):   1, state: ON, reserve-cnt:   1
-[    200][   200] ID(hex):   1, state: OFF, reserve-cnt:   1
-[    500][   300] ID(hex):   1, state: ON, reserve-cnt:   0
-[    700][   200] ID(hex):   1, state: OFF, reserve-cnt:   0
-[   2000][  1300] ID(hex):   1, state: ON, reserve-cnt:   1
-[   2200][   200] ID(hex):   1, state: OFF, reserve-cnt:   1
-[   2500][   300] ID(hex):   1, state: ON, reserve-cnt:   0
-[   2700][   200] ID(hex):   1, state: OFF, reserve-cnt:   0
-[   4000][  1300] ID(hex):   1, state: ON, reserve-cnt:   1
-[   4200][   200] ID(hex):   1, state: OFF, reserve-cnt:   1
-[   4500][   300] ID(hex):   1, state: ON, reserve-cnt:   0
-[   4700][   200] ID(hex):   1, state: OFF, reserve-cnt:   0
-[   6000][  1300] ID(hex):   1, state: ON, reserve-cnt:   1
-[   6200][   200] ID(hex):   1, state: OFF, reserve-cnt:   1
-[   6500][   300] ID(hex):   1, state: ON, reserve-cnt:   0
-[   6700][   200] ID(hex):   1, state: OFF, reserve-cnt:   0
-[   8000][  1300] ID(hex):   1, state: ON, reserve-cnt:   1
+[      0][     0] ID(hex):   1, state: ON, reserve-cnt:   2
+[    200][   200] ID(hex):   1, state: OFF, reserve-cnt:   2
+[    500][   300] ID(hex):   1, state: ON, reserve-cnt:   1
+[    700][   200] ID(hex):   1, state: OFF, reserve-cnt:   1
+[   2000][  1300] ID(hex):   1, state: ON, reserve-cnt:   2
+[   2200][   200] ID(hex):   1, state: OFF, reserve-cnt:   2
+[   2500][   300] ID(hex):   1, state: ON, reserve-cnt:   1
+[   2700][   200] ID(hex):   1, state: OFF, reserve-cnt:   1
+[   4000][  1300] ID(hex):   1, state: ON, reserve-cnt:   2
+[   4200][   200] ID(hex):   1, state: OFF, reserve-cnt:   2
+[   4500][   300] ID(hex):   1, state: ON, reserve-cnt:   1
+[   4700][   200] ID(hex):   1, state: OFF, reserve-cnt:   1
+[   6000][  1300] ID(hex):   1, state: ON, reserve-cnt:   2
+[   6200][   200] ID(hex):   1, state: OFF, reserve-cnt:   2
+[   6500][   300] ID(hex):   1, state: ON, reserve-cnt:   1
+[   6700][   200] ID(hex):   1, state: OFF, reserve-cnt:   1
+[   8000][  1300] ID(hex):   1, state: ON, reserve-cnt:   2
 Testing test_events_blink_repeat ........................................... pass
 Executing 'run: all' complete!
 ```

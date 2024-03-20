@@ -32,7 +32,7 @@ void eled_process_end_work(eled_led_t *led)
     led->is_in_process = 0;
     eled_stop_timer(led);
 
-    if(ebtobj->event_end_fn)
+    if (ebtobj->event_end_fn)
     {
         ebtobj->event_end_fn(led);
     }
@@ -89,7 +89,7 @@ void eled_process_next_state(eled_led_t *led)
             else
             {
 #ifdef ELED_PROCESS_LAST_OFF_EVENT
-                if(led->param.time_inactive)
+                if (led->param.time_inactive)
                 {
                     eled_start_timer(led, led->param.time_inactive);
                 }
@@ -125,7 +125,7 @@ int eled_start(eled_led_t *led, const eled_led_param_t *param)
     {
         return 0;
     }
-    
+
     // if inactive time is zeor and blink count is more than 1
     if ((param->time_inactive == 0) && (param->blink_cnt > 1))
     {
@@ -137,7 +137,7 @@ int eled_start(eled_led_t *led, const eled_led_param_t *param)
     {
         eled_stop(led);
     }
-    
+
     // prepare led param, and add to led list
     memcpy(&led->param, param, sizeof(eled_led_param_t));
 

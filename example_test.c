@@ -283,7 +283,7 @@ static void prv_led_set_state(struct eled_led *led, uint8_t state)
 static void proc_led_end_event(struct eled_led *led)
 {
     printf("[%7u] LED end event. ID(hex):%4x, effect_id:0x%x\r\n", (unsigned)test_timer_get_ticks(), led->led_id, led->param.id);
-    if(!test_processed_end_event_processed)
+    if (!test_processed_end_event_processed)
     {
         test_processed_end_event_processed = 1;
         ASSERT((led->param.id == select_test_item->test_param->id));
@@ -361,8 +361,7 @@ int example_test(void)
             }
         }
 
-        if (!test_get_led_by_led_id(select_test_item->test_led_id)->param.is_repeat
-            && select_test_item->test_events_cnt)
+        if (!test_get_led_by_led_id(select_test_item->test_led_id)->param.is_repeat && select_test_item->test_events_cnt)
         {
             ASSERT(test_processed_array_index == select_test_item->test_events_cnt);
             ASSERT(test_processed_end_event_processed == 1);
