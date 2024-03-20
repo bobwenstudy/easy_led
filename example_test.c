@@ -105,6 +105,7 @@ static eled_led_t leds[] = {
 };
 
 static volatile uint32_t test_processed_time_current;
+static volatile uint32_t test_processed_end_event_processed;
 
 /* Set led state -> used for test purposes */
 #define LED_STATE_RAW(_state_, _blink_reserve_cnt_, _duration_)                                                                                                \
@@ -281,7 +282,17 @@ static void prv_led_set_state(struct eled_led *led, uint8_t state)
 /* Process led event */
 static void proc_led_end_event(struct eled_led *led)
 {
-    printf("LED end event. led_id:0x%x, effect_id:0x%x\r\n", led->led_id, led->param.id);
+    printf("[%7u] LED end event. ID(hex):%4x, effect_id:0x%x\r\n", (unsigned)test_timer_get_ticks(), led->led_id, led->param.id);
+    if(!test_processed_end_event_processed)
+    {
+        test_processed_end_event_processed = 1;
+        ASSERT((led->param.id == select_test_item->test_param->id));
+#ifdef ELED_PROCESS_LAST_OFF_EVENT
+        ASSERT((test_timer_get_ticks() == led->param.blink_cnt * (led->param.time_active + led->param.time_inactive)));
+#else
+        ASSERT((test_timer_get_ticks() == led->param.blink_cnt * led->param.time_active + (led->param.blink_cnt - 1) * led->param.time_inactive));
+#endif
+    }
 }
 
 void tester_eled_start_timer(struct eled_led *led, uint16_t time)
@@ -318,6 +329,7 @@ int example_test(void)
         test_processed_event_time_prev = 0;
         test_processed_array_index = 0;
         test_processed_time_current = 0;
+        test_processed_end_event_processed = 0;
 
         test_timer_init();
 
@@ -341,16 +353,19 @@ int example_test(void)
                 if (test_processed_array_index >= select_test_item->test_events_cnt)
                 {
                     uint32_t duration = test_get_state_total_duration();
-                    if (i > duration + 1)
+                    if ((i > duration + 1) && test_processed_end_event_processed)
                     {
                         ASSERT(!test_get_led_by_led_id(select_test_item->test_led_id)->is_in_process);
                     }
                 }
             }
         }
-        if (!test_get_led_by_led_id(select_test_item->test_led_id)->param.is_repeat)
+
+        if (!test_get_led_by_led_id(select_test_item->test_led_id)->param.is_repeat
+            && select_test_item->test_events_cnt)
         {
             ASSERT(test_processed_array_index == select_test_item->test_events_cnt);
+            ASSERT(test_processed_end_event_processed == 1);
         }
 
         // printf("\n");

@@ -89,7 +89,14 @@ void eled_process_next_state(eled_led_t *led)
             else
             {
 #ifdef ELED_PROCESS_LAST_OFF_EVENT
-                eled_start_timer(led, led->param.time_inactive);
+                if(led->param.time_inactive)
+                {
+                    eled_start_timer(led, led->param.time_inactive);
+                }
+                else
+                {
+                    eled_process_end_work(led);
+                }
 #else
                 eled_process_end_work(led);
 #endif

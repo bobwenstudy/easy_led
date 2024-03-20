@@ -14,7 +14,7 @@ struct eled;
 
 #define ELED_MAX_KEYNUM (32)
 
-// #define ELED_PROCESS_LAST_OFF_EVENT
+#define ELED_PROCESS_LAST_OFF_EVENT
 
 /**
  * \brief           Set state state callback function

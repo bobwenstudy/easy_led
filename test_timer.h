@@ -26,6 +26,8 @@ int test_timer_start(struct test_timer *handle, int time);
 void test_timer_stop(struct test_timer *handle);
 void test_timer_polling(void);
 
+extern uint32_t test_timer_get_ticks(void);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

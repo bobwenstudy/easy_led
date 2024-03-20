@@ -5,8 +5,6 @@
 
 #include "test_timer.h"
 
-extern uint32_t test_timer_get_ticks(void);
-
 struct test_timer *head_handle;
 
 int test_timer_init(void)

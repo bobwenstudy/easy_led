@@ -80,7 +80,7 @@ void prv_led_set_state(struct eled_led *led, uint8_t state)
     }
 
     SetConsoleTextAttribute(hConsole, color);
-    printf("[%7u][%6u] ID(hex):%4x, state: %s, reserve-cnt: %3u\r\n", (unsigned)get_tick(), (unsigned)diff_time, led->led_id, state ? "ON" : "OFF",
+    printf("[%7u][%6u] ID(hex):%4x, state: %s, reserve-cnt: %3u\r\n", (unsigned)test_timer_get_ticks(), (unsigned)diff_time, led->led_id, state ? "ON" : "OFF",
            led->blink_reserve_cnt);
     SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
 }
@@ -88,7 +88,7 @@ void prv_led_set_state(struct eled_led *led, uint8_t state)
 /* Process led event */
 static void proc_led_end_event(struct eled_led *led)
 {
-    printf("[%7u] LED end event. led_id:0x%x, effect_id:0x%x\r\n", (unsigned)get_tick(), led->led_id, led->param.id);
+    printf("[%7u] LED end event. ID(hex):%4x, effect_id:0x%x\r\n", (unsigned)test_timer_get_ticks(), led->led_id, led->param.id);
 }
 
 void user_eled_start_timer(struct eled_led *led, uint16_t time)
